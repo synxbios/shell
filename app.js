@@ -8,6 +8,15 @@ function logArrayElements(element, index, array) {
 var ls = JSON.parse(jsontext);
 ls.forEach(logArrayElements);
 
+function contains(a, obj) {
+    for (var i = 0; i < a.length; i++) {
+        if (a[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
 
-console.log("domains" + domains);
+var hasDomain = contains(domains,'altraN');
+console.log("domains has domain:" + domains);
 		

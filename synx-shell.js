@@ -3,7 +3,7 @@
  */
 var httpclient = require('ringo/httpclient');
 var content = [];
-//var pcc = [];
+//var pwc = [];
 var context = [];
 context.type = 'Unauthorized';
 var ls = [];
@@ -11,7 +11,7 @@ exports.connect = function(username, password) {
     var url = 'https://api.ipify.org?format=json';
     var result = httpclient.get(url);
     content = JSON.parse(result.content);
-    //pcc = content;
+    //pwc = content;
     return content;
 };
 
@@ -32,7 +32,7 @@ function updateServiceNames(element, index, array) {
 }
 
 function listServices(domain){
-    console.debug('List services. Domain: ' + domain + ', username: ' + credentials.username);
+    console.log('List services. Domain: ' + domain + ', username: ' + credentials.username);
     var {request} = require('ringo/httpclient');
     var exchange = request({
         method: 'GET',
@@ -47,7 +47,7 @@ function listServices(domain){
         }
     });
     if(exchange.status == 200) {
-        //pcc = 'domains'; //exchange.content;
+        //pwc = 'domains'; //exchange.content;
         console.log("Content: " + exchange.content);
         ls = JSON.parse(exchange.content);
         serviceNames = [];
@@ -59,6 +59,16 @@ function listServices(domain){
     }
 
 }
+
+function contains(a, obj) {
+    for (var i = 0; i < a.length; i++) {
+        if (a[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 
 exports.login = function(username, password) {
@@ -78,7 +88,7 @@ exports.login = function(username, password) {
         }
     });
     if(exchange.status == 200) {
-        //pcc = 'domains'; //exchange.content;
+        //pwc = 'domains'; //exchange.content;
         console.log("Content: " + exchange.content);
         ls = JSON.parse(exchange.content);
         domains = [];
@@ -86,7 +96,7 @@ exports.login = function(username, password) {
         console.log("domains: " + domains);
         context.type = "home";
         context.name = "home";
-        return exports.pcc();
+        return exports.pwc();
     } else {
         console.error("Failed to list domains. Status: " + exchange.status);
     }
@@ -103,11 +113,11 @@ exports.ls = function() {
        // });
 
         return domains;
-    } else if (context.type = "domain") {
+    } else if (context.type == "domain") {
         console.log("List services.");
         listServices(context.name);
         return serviceNames;
-    } else if (context.type = "service") {
+    } else if (context.type == "service") {
         console.log("List items.");
     }
 }
@@ -116,18 +126,39 @@ exports.cat = function(serviceName) {
     return "TODO";
 }
 
-
+/*
+@deprecated
+*/
 exports.use = function(name) {
+    exports.cc(name);
+}
+
+exports.cc = function(name) {
     console.log("context " + context.type);
     if (context.type == "home") {
         console.log("is home");
         context.type = "domain";
         context.name = name;
+    } else if (context.type == "domain") {
+        console.log("is domain");
+        var domainId = context.name;
+        if (contains(serviceNames,name)) {
+            context.type = "service";
+            context.name = domainId + "/" + name;
+        } else {
+            return exports.pwc() + " Service [" + name +"] is not found in domain ["+ domainId+"]";
+        }
     }
-    return exports.pcc();
+    return exports.pwc();
 }
 
+/*
+@deprecated
+*/
 exports.pcc = function() {
+    return "/" +context.name;
+}
+exports.pwc = function() {
     return "/" +context.name;
 }
 
