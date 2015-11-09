@@ -34,6 +34,9 @@ function updateServiceNames(element, index, array) {
 
 function listServices(domain){
     console.trace('List services. Domain: ' + domain + ', username: ' + credentials.username);
+    var path = '/domains' + domain + '/services'
+    var exchange = querySynx(path);
+    /*
     var {request} = require('ringo/httpclient');
     var exchange = request({
         method: 'GET',
@@ -47,6 +50,7 @@ function listServices(domain){
             'Accept': 'application/json'
         }
     });
+    */
     if(exchange.status == 200) {
         //pwc = 'domains'; //exchange.content;
         console.trace("Content: " + exchange.content);
@@ -70,13 +74,26 @@ function contains(a, obj) {
     return false;
 }
 
-exports.login = function(rootUrl,username, password) {
-    synxUrl = rootUrl;
-    credentials.username = username;
-    credentials.password = password;
-    return listDomains();
-}
 
+
+function querySynx(path) {
+    var {request} = require('ringo/httpclient');
+    var fullUrl = synxUrl + path;
+    console.trace('Query: ' + fullUrl);
+    var exchange = request({
+        method: 'GET',
+        contentType: "application/json",
+        data: "application/json",
+        url: fullUrl,
+        username: credentials.username,
+        password: credentials.password,
+        headers: {
+            'x-custom-header': 'foobar',
+            'Accept': 'application/json'
+        }
+    });
+    return exchange;
+}
 function listDomains() {
     var {request} = require('ringo/httpclient');
     var exchange = request({
@@ -108,6 +125,13 @@ function listDomains() {
     }
 }
 
+exports.login = function(rootUrl,username, password) {
+    synxUrl = rootUrl;
+    credentials.username = username;
+    credentials.password = password;
+    return listDomains();
+}
+
 exports.ls = function() {
     console.trace("Ls. Context type: " + context.type);
     if (context.type == "home") {
@@ -129,24 +153,6 @@ exports.ls = function() {
     }
 }
 
-function querySynx(exchange, path) {
-    var {request} = require('ringo/httpclient');
-    var fullUrl = synxUrl + path;
-    console.trace('Query: ' + fullUrl);
-    exchange = request({
-        method: 'GET',
-        contentType: "application/json",
-        data: "application/json",
-        url: fullUrl,
-        username: credentials.username,
-        password: credentials.password,
-        headers: {
-            'x-custom-header': 'foobar',
-            'Accept': 'application/json'
-        }
-    });
-    return exchange;
-}
 exports.cat = function(serviceId) {
     var domain = context.name;
     console.trace('Print service spec. Domain: ' + domain + ', service '+serviceId + ', username: ' + credentials.username);
@@ -163,13 +169,6 @@ exports.cat = function(serviceId) {
         console.error("Failed to fetch service. Status: " + exchange.status);
     }
     return "{ \"NotFound\": " + domain + "/" +serviceId + "}";
-}
-
-/*
-@deprecated
-*/
-exports.use = function(name) {
-    exports.cc(name);
 }
 
 exports.cc = function(name) {
