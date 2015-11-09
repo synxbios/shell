@@ -7,7 +7,7 @@ var content = [];
 var context = [];
 context.type = 'Unauthorized';
 var ls = [];
-var synxUrl = 'http://localhost:8080/synx'
+var synxUrl = 'http://localhost:8080/synx';
 exports.connect = function(username, password) {
     var url = 'https://api.ipify.org?format=json';
     var result = httpclient.get(url);
@@ -39,7 +39,7 @@ function listServices(domain){
         method: 'GET',
         contentType: "application/json",
         data: "application/json",
-        url: 'http://localhost:8080/synx/domains/' + domain + '/services',
+        url: synxUrl + domain + '/services',
         username: credentials.username,
         password: credentials.password,
         headers: {
@@ -70,19 +70,21 @@ function contains(a, obj) {
     return false;
 }
 
-
-
 exports.login = function(rootUrl,username, password) {
     synxUrl = rootUrl;
     credentials.username = username;
     credentials.password = password;
+    return listDomains();
+}
+
+function listDomains() {
     var {request} = require('ringo/httpclient');
     var exchange = request({
         method: 'GET',
         contentType: "application/json",
         data: "application/json",
         //url: 'http://localhost:8020/domainconfig/domains',
-        url: synxUrl,
+        url: synxUrl + "/domains",
         username: credentials.username,
         password: credentials.password,
         headers: {
@@ -115,6 +117,7 @@ exports.ls = function() {
        //     //console.trace(key, ls[key].id);
        //     domains.push(ls[key].name);
        // });
+        listDomains();
 
         return domains;
     } else if (context.type == "domain") {
@@ -126,16 +129,15 @@ exports.ls = function() {
     }
 }
 
-exports.cat = function(serviceId) {
-    var domain = context.name;
-    console.trace('Print service spec. Domain: ' + domain + ', service '+serviceId + ', username: ' + credentials.username);
+function querySynx(exchange, path) {
     var {request} = require('ringo/httpclient');
-    var exchange = request({
+    var fullUrl = synxUrl + path;
+    console.trace('Query: ' + fullUrl);
+    exchange = request({
         method: 'GET',
         contentType: "application/json",
         data: "application/json",
-        //url: 'http://localhost:8080/synx/domains/' + domain + '/services' + serviceId,
-        url: "http://localhost:8080/synx/domains/altran/services/gw",
+        url: fullUrl,
         username: credentials.username,
         password: credentials.password,
         headers: {
@@ -143,6 +145,15 @@ exports.cat = function(serviceId) {
             'Accept': 'application/json'
         }
     });
+    return exchange;
+}
+exports.cat = function(serviceId) {
+    var domain = context.name;
+    console.trace('Print service spec. Domain: ' + domain + ', service '+serviceId + ', username: ' + credentials.username);
+
+    var path = '/domains/' + domain + '/services/' + serviceId;
+    var exchange = [];
+    exchange = querySynx(exchange, path);
     if(exchange.status == 200) {
         console.trace("Content: " + exchange.content);
         var serviceSpec = JSON.parse(exchange.content);
