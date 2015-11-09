@@ -39,7 +39,7 @@ function listServices(domain){
         method: 'GET',
         contentType: "application/json",
         data: "application/json",
-        url: 'http://localhost:8020/domainconfig/domains/' + domain + '/services',
+        url: 'http://localhost:8080/synx/domains/' + domain + '/services',
         username: credentials.username,
         password: credentials.password,
         headers: {
@@ -126,8 +126,32 @@ exports.ls = function() {
     }
 }
 
-exports.cat = function(serviceName) {
-    return "TODO";
+exports.cat = function(serviceId) {
+    var domain = context.name;
+    console.trace('Print service spec. Domain: ' + domain + ', service '+serviceId + ', username: ' + credentials.username);
+    var {request} = require('ringo/httpclient');
+    var exchange = request({
+        method: 'GET',
+        contentType: "application/json",
+        data: "application/json",
+        //url: 'http://localhost:8080/synx/domains/' + domain + '/services' + serviceId,
+        url: "http://localhost:8080/synx/domains/altran/services/gw",
+        username: credentials.username,
+        password: credentials.password,
+        headers: {
+            'x-custom-header': 'foobar',
+            'Accept': 'application/json'
+        }
+    });
+    if(exchange.status == 200) {
+        console.trace("Content: " + exchange.content);
+        var serviceSpec = JSON.parse(exchange.content);
+        console.trace("serviceSpec: " + serviceSpec);
+        return serviceSpec;
+    } else {
+        console.error("Failed to fetch service. Status: " + exchange.status);
+    }
+    return "{ \"NotFound\": " + domain + "/" +serviceId + "}";
 }
 
 /*
