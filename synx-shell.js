@@ -7,6 +7,7 @@ var content = [];
 var context = [];
 context.type = 'Unauthorized';
 var ls = [];
+var synxUrl = 'http://localhost:8080/synx'
 exports.connect = function(username, password) {
     var url = 'https://api.ipify.org?format=json';
     var result = httpclient.get(url);
@@ -22,17 +23,17 @@ var credentials = [{'username':'',
     'userTokenId':''}];
 
 function updateDomainIds(element, index, array) {
-  console.log('a[' + index + '] = ' + element.domainId);
+  console.trace('a[' + index + '] = ' + element.domainId);
   domains.push(element.domainId);
 }
 
 function updateServiceNames(element, index, array) {
-    console.log('a[' + index + '] = ' + element.name);
+    console.trace('a[' + index + '] = ' + element.name);
     serviceNames.push(element.name);
 }
 
 function listServices(domain){
-    console.log('List services. Domain: ' + domain + ', username: ' + credentials.username);
+    console.trace('List services. Domain: ' + domain + ', username: ' + credentials.username);
     var {request} = require('ringo/httpclient');
     var exchange = request({
         method: 'GET',
@@ -48,11 +49,11 @@ function listServices(domain){
     });
     if(exchange.status == 200) {
         //pwc = 'domains'; //exchange.content;
-        console.log("Content: " + exchange.content);
+        console.trace("Content: " + exchange.content);
         ls = JSON.parse(exchange.content);
         serviceNames = [];
         ls.forEach(updateServiceNames);
-        console.log("serviceNames: " + serviceNames);
+        console.trace("serviceNames: " + serviceNames);
         return serviceNames;
     } else {
         console.error("Failed to list domains. Status: " + exchange.status);
@@ -71,7 +72,8 @@ function contains(a, obj) {
 
 
 
-exports.login = function(username, password) {
+exports.login = function(rootUrl,username, password) {
+    synxUrl = rootUrl;
     credentials.username = username;
     credentials.password = password;
     var {request} = require('ringo/httpclient');
@@ -79,7 +81,8 @@ exports.login = function(username, password) {
         method: 'GET',
         contentType: "application/json",
         data: "application/json",
-        url: 'http://localhost:8020/domainconfig/domains',
+        //url: 'http://localhost:8020/domainconfig/domains',
+        url: synxUrl,
         username: credentials.username,
         password: credentials.password,
         headers: {
@@ -89,13 +92,14 @@ exports.login = function(username, password) {
     });
     if(exchange.status == 200) {
         //pwc = 'domains'; //exchange.content;
-        console.log("Content: " + exchange.content);
+        console.trace("Content: " + exchange.content);
         ls = JSON.parse(exchange.content);
         domains = [];
         ls.forEach(updateDomainIds);
-        console.log("domains: " + domains);
+        console.trace("domains: " + domains);
         context.type = "home";
         context.name = "home";
+        console.log(exports.pwc());
         return exports.pwc();
     } else {
         console.error("Failed to list domains. Status: " + exchange.status);
@@ -103,22 +107,22 @@ exports.login = function(username, password) {
 }
 
 exports.ls = function() {
-    console.log("Ls. Context type: " + context.type);
+    console.trace("Ls. Context type: " + context.type);
     if (context.type == "home") {
 
        // var domains = [];
        // Object.keys(ls).forEach(function(key) {
-       //     //console.log(key, ls[key].id);
+       //     //console.trace(key, ls[key].id);
        //     domains.push(ls[key].name);
        // });
 
         return domains;
     } else if (context.type == "domain") {
-        console.log("List services.");
+        console.trace("List services.");
         listServices(context.name);
         return serviceNames;
     } else if (context.type == "service") {
-        console.log("List items.");
+        console.trace("List items.");
     }
 }
 
@@ -134,13 +138,13 @@ exports.use = function(name) {
 }
 
 exports.cc = function(name) {
-    console.log("context " + context.type);
+    console.trace("context " + context.type);
     if (context.type == "home") {
-        console.log("is home");
+        console.trace("is home");
         context.type = "domain";
         context.name = name;
     } else if (context.type == "domain") {
-        console.log("is domain");
+        console.trace("is domain");
         var domainId = context.name;
         if (contains(serviceNames,name)) {
             context.type = "service";
