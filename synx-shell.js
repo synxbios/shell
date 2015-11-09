@@ -34,7 +34,7 @@ function updateServiceNames(element, index, array) {
 
 function listServices(domain){
     console.trace('List services. Domain: ' + domain + ', username: ' + credentials.username);
-    var path = '/domains' + domain + '/services'
+    var path = '/domains/' + domain + '/services'
     var exchange = querySynx(path);
     /*
     var {request} = require('ringo/httpclient');
@@ -95,6 +95,8 @@ function querySynx(path) {
     return exchange;
 }
 function listDomains() {
+    var path = "/domains";
+    /*
     var {request} = require('ringo/httpclient');
     var exchange = request({
         method: 'GET',
@@ -109,6 +111,8 @@ function listDomains() {
             'Accept': 'application/json'
         }
     });
+    */
+    var exchange = querySynx(path);
     if(exchange.status == 200) {
         //pwc = 'domains'; //exchange.content;
         console.trace("Content: " + exchange.content);
@@ -159,7 +163,7 @@ exports.cat = function(serviceId) {
 
     var path = '/domains/' + domain + '/services/' + serviceId;
     var exchange = [];
-    exchange = querySynx(exchange, path);
+    exchange = querySynx(path);
     if(exchange.status == 200) {
         console.trace("Content: " + exchange.content);
         var serviceSpec = JSON.parse(exchange.content);
